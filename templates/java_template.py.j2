@@ -2,13 +2,36 @@ import java.util.List;
 import java.util.ArrayList;
 import java.time.LocalDate;
 
+{# Python to Java/Kotlin type mapping #}
 {% set type_map = {
-    'str': 'String',
+    'str': 'String',     
     'int': 'int',
     'float': 'double',
     'bool': 'boolean',
-    'datetime': 'LocalDate'
-} %}
+    'long': 'long',
+    'bytes': 'byte[]',
+    'None': 'null',
+    
+    'list': 'List<T>', 
+    'dict': 'Map<K,V>',
+    'set': 'Set<T>',
+    'tuple': 'Object[]',  
+    
+    'decimal': 'BigDecimal',
+    'complex': 'Complex',  
+    
+    'datetime': 'LocalDateTime',
+    'date': 'LocalDate',
+    'time': 'LocalTime',
+    'timezone': 'ZoneId',
+    'timedelta': 'Duration',
+    
+    'array': 'Array<T>',
+    'any': 'Object',
+    'callable': 'Function<T,R>',
+    'generator': 'Iterator<T>'
+}
+%}
 
 {% for class in model.get_classes() %}
 public class {{ class.name }} {
@@ -22,12 +45,9 @@ public class {{ class.name }} {
         {% for attribute in class.attributes %}
         this.{{ attribute.name }} = {{ attribute.name }};
         {% endfor %}
+        {# TODO - Add relation-dependant variables #}
     }
-    {% for ass in model.associations %}
-    {{ass.ends}}
-    TBD
-    {% endfor %}
-
+    
     {% for attribute in class.attributes %}
     public {{ type_map.get(attribute.type.name) }} get{{ attribute.name|capitalize }}() {
         return {{ attribute.name }};
@@ -37,5 +57,35 @@ public class {{ class.name }} {
     }
     {% endfor %}
 
+    {# TODO - Check relation-dependance and fix #}
+    {% for ass in model.associations %} 
+        {% set class_names = [] %}
+        {% for property in ass.ends %}
+            {% if property.type is defined and property.type.__class__.__name__ == 'Class' %}
+                {# Save class names for later #}
+                {% set _ = class_names.append(property.type.name) %}
+            {% endif %}
+        {% endfor %}
+        {% if class_names[0] == class.name %}
+            {% set other_class = class_names[1] %}
+        {% elif class_names[1] == class.name %}
+            {% set other_class = class_names[0] %}
+        {% endif %}
+    public void add{{ other_class }}({{ other_class }} {{ other_class|lower }}) {
+        if (!{{ other_class|lower }}s.contains({{ other_class|lower }})) {
+            {{ other_class|lower }}s.add({{ other_class|lower }});
+            {{ other_class|lower }}.add{{ class.name }}(this);
+        }
+    }   
+    {% endfor %}
+
+    @Override
+    public String toString() {
+        return "{{ class.name }}{"{%- for attribute in class.attributes -%}
+        {{ attribute.name }} ='" + {{ attribute.name }} + "',
+    {%- endfor -%}
+    {# TODO - Add relation-dependant variables #}
+    + "}";    
+    }
 }
 {% endfor %}
