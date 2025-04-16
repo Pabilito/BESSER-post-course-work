@@ -1,0 +1,41 @@
+import java.util.List;
+import java.util.ArrayList;
+import java.time.LocalDate;
+
+{% set type_map = {
+    'str': 'String',
+    'int': 'int',
+    'float': 'double',
+    'bool': 'boolean',
+    'datetime': 'LocalDate'
+} %}
+
+{% for class in model.get_classes() %}
+public class {{ class.name }} {
+    {% for attribute in class.attributes %}
+    private {{ type_map.get(attribute.type.name) }} {{ attribute.name }};
+    {% endfor %}
+
+    public {{ class.name }}({%- for attribute in class.attributes -%}
+            {{ type_map.get(attribute.type.name) }} {{ attribute.name }}{% if not loop.last %}, {% endif %}
+        {%- endfor -%}){
+        {% for attribute in class.attributes %}
+        this.{{ attribute.name }} = {{ attribute.name }};
+        {% endfor %}
+    }
+    {% for ass in model.associations %}
+    {{ass.ends}}
+    TBD
+    {% endfor %}
+
+    {% for attribute in class.attributes %}
+    public {{ type_map.get(attribute.type.name) }} get{{ attribute.name|capitalize }}() {
+        return {{ attribute.name }};
+    }
+    public void set{{ attribute.name|capitalize }}({{ type_map.get(attribute.type.name) }} {{ attribute.name }}) {
+        this.{{ attribute.name }} = {{ attribute.name }};
+    }
+    {% endfor %}
+
+}
+{% endfor %}
