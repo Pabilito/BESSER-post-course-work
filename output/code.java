@@ -7,6 +7,11 @@ public class Book {
     private int pages;
     private String title;
     private LocalDateTime release;
+ 
+ 
+ 
+    private Library library;
+    private List<Author> authors;
 
     public Book(int pages, String title, LocalDateTime release){
         this.pages = pages;
@@ -56,6 +61,10 @@ public class Book {
 public class Library {
     private String name;
     private String address;
+ 
+ 
+ 
+    private Book book;
 
     public Library(String name, String address){
         this.name = name;
@@ -98,6 +107,9 @@ public class Library {
 public class Author {
     private String name;
     private String email;
+ 
+ 
+    private List<Book> books;
 
     public Author(String name, String email){
         this.name = name;

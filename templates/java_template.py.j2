@@ -1,3 +1,4 @@
+{# TODO - FIX Imports #}
 import java.util.List;
 import java.util.ArrayList;
 import java.time.LocalDate;
@@ -34,9 +35,44 @@ import java.time.LocalDate;
 %}
 
 {% for class in model.get_classes() %}
+    {# Store association information for later [Mult1, Mult2, Class1, Class2] #}
+    {% set associations = [] %}
+    {# 0. Check associations #}
+    {%- for ass in model.associations -%} 
+        {% set association_data = [] %}
+        {% for property in ass.ends %}
+            {% if property.multiplicity is defined %}
+                {% set _ = association_data.append(property.multiplicity._Multiplicity__min) %}
+                {% set _ = association_data.append(property.multiplicity._Multiplicity__max) %}
+            {% endif %}
+            {% if property.type is defined and property.type.__class__.__name__ == 'Class' %}
+                {% set _ = association_data.append(property.type.name) %}
+            {% endif %}
+        {% endfor %}
+        {% set _ = associations.append(association_data) %}
+    {%- endfor -%}
+
 public class {{ class.name }} {
+    {# 1. Define attributes #}
+    {# 1.1 Internal variables #}
     {% for attribute in class.attributes %}
     private {{ type_map.get(attribute.type.name) }} {{ attribute.name }};
+    {% endfor %} 
+    {# 1.2 Variables derived from relations #} 
+    {% for ass in associations %}
+        {%- if ass[2] == class.name -%}
+            {% if ass[1] > 1 %}
+    private List<{{ ass[5] }}> {{ ass[5]|lower }}s;
+            {% else %} 
+    private {{ ass[5] }} {{ ass[5]|lower }};
+            {% endif %} 
+        {%- elif ass[5] == class.name -%}
+            {% if ass[1] > 1 %}
+    private List<{{ ass[2] }}> {{ ass[2]|lower }}s;
+            {% else %} 
+    private {{ ass[2] }} {{ ass[2]|lower }};
+            {% endif %} 
+        {%- endif -%} 
     {% endfor %}
 
     public {{ class.name }}({%- for attribute in class.attributes -%}
