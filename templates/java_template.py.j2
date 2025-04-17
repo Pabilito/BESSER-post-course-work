@@ -1,8 +1,3 @@
-{# TODO - FIX Imports #}
-import java.util.List;
-import java.util.ArrayList;
-import java.time.LocalDate;
-
 {# Python to Java type mapping #}
 {% set type_map = {
     'str': 'String',     
@@ -18,9 +13,6 @@ import java.time.LocalDate;
     'set': 'Set<T>',
     'tuple': 'Object[]',  
     
-    'decimal': 'BigDecimal',
-    'complex': 'Complex',  
-    
     'datetime': 'LocalDateTime',
     'date': 'LocalDate',
     'time': 'LocalTime',
@@ -33,6 +25,39 @@ import java.time.LocalDate;
     'generator': 'Iterator<T>'
 }
 %}
+
+{% set import_map = {
+    'list': 'java.util.List',
+    'dict': 'java.util.Map',
+    'set': 'java.util.Set',
+    'datetime': 'java.time.LocalDateTime',
+    'date': 'java.time.LocalDate',
+    'time': 'java.time.LocalTime',
+    'timezone': 'java.time.ZoneId',
+    'timedelta': 'java.time.Duration',
+    'callable': 'java.util.function.Function',
+    'generator': 'java.util.Iterator',
+    'list_impl': 'java.util.ArrayList',
+    'dict_impl': 'java.util.HashMap',
+    'set_impl': 'java.util.HashSet'
+} %}
+
+{# TBD - Choose a correct data structure #}
+{% set imported_already = {
+    'list': false,
+    'dict': false,
+    'set': false,
+    'datetime': false,
+    'date': false,
+    'time': false,
+    'timezone': false,
+    'timedelta': false,
+    'callable': false,
+    'generator': false,
+    'list_impl': false,
+    'dict_impl': false,
+    'set_impl': false
+} %}
 
 {# Store association information for later [Mult1_1, Mult1_2, Mult2_1, Mult2_2, Class1, Class2] #}
 {% set associations = [] %}
@@ -51,6 +76,26 @@ import java.time.LocalDate;
     {% set _ = associations.append(association_data) %}
 {%- endfor -%}
 
+{# 1. Make imports #}
+{% for ass in associations %}
+    {% if not imported_already.get('list') %}
+        {% if ass[1] > 1 or ass[4] > 1 %}
+            {# TBD - Change value in data structure #}
+import {{ import_map.get('list_impl') }}
+import {{ import_map.get('list') }}
+        {% endif %}
+    {% endif %}
+{% endfor %}{% for hypothetical_type, import_path in import_map.items() %}
+    {% for model in model.get_classes() %}
+        {% for attribute in model.attributes %}
+            {% if hypothetical_type == attribute.type.name and not imported_already.get(hypothetical_type) %}
+                {# TBD - Change value in data structure #}
+import {{ import_path }};
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+{% endfor %}
+
 {% for class in model.get_classes() %}
     {% set tmp_associations = [] %}
     {%- for ass in associations -%}
@@ -60,12 +105,12 @@ import java.time.LocalDate;
     {%- endfor -%}
 
 public class {{ class.name }} {
-    {# 1. Define attributes #}
-    {# 1.1 Internal variables #}
+    {# 2. Define attributes #}
+    {# 2.1 Internal variables #}
     {% for attribute in class.attributes %}
     private {{ type_map.get(attribute.type.name) }} {{ attribute.name }}; 
     {% endfor %}
-    {#- 1.2 Variables derived from relations -#} 
+    {#- 2.2 Variables derived from relations -#} 
     {%- for ass in tmp_associations -%}
         {%- if ass[2] == class.name -%}
             {% if ass[4] > 1 %}
@@ -80,7 +125,7 @@ public class {{ class.name }} {
         {%- endif -%} 
     {%- endfor -%}
     
-    {# 2. Constructor #}
+    {# 3. Constructor #}
 
     public {{ class.name }}({%- for attribute in class.attributes -%}
             {{ type_map.get(attribute.type.name) }} {{ attribute.name }}{% if not loop.last %}, {% endif %}
@@ -102,7 +147,7 @@ public class {{ class.name }} {
         {%- endfor -%}      
 
     }
-    {# 3. Getters/Setters #}
+    {# 4. Getters/Setters #}
     {% for attribute in class.attributes %}
     public {{ type_map.get(attribute.type.name) }} get{{ attribute.name|capitalize }}() {
         return {{ attribute.name }};
@@ -111,7 +156,7 @@ public class {{ class.name }} {
         this.{{ attribute.name }} = {{ attribute.name }};
     }
     {% endfor %}
-    {# 4. Add/set #}
+    {# 5. Add/set #}
     {% for ass in tmp_associations %}
         {%- if ass[2] == class.name -%}
             {% if ass[4] > 1 %}
@@ -156,7 +201,7 @@ public class {{ class.name }} {
         {%- endif -%} 
     {% endfor %}
 
-    {# 5. ToString #}
+    {# 6. ToString #}
     @Override
     public String toString() {
         return "{{ class.name }}{
