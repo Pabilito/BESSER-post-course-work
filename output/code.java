@@ -4,14 +4,15 @@ import java.time.LocalDate;
 
 
 public class Author {
-    private String name;
-    private String email;
- 
+    private String name; 
+    private String email; 
     private List<Book> books;
+
     public Author(String name, String email){
         this.name = name;
         this.email = email;
-    }
+        this.books = new ArrayList<>();
+}
     public String getName() {
         return name;
     }
@@ -30,25 +31,27 @@ public class Author {
             book.addAuthor(this);
         }
     }
+
     @Override
     public String toString() {
-        return "Author{name='" + name + "', email='" + email + "', books=" + books.size() + "}";
+        return "Author{name=" + name + ", email=" + email + ", books=" + books.size() + "}";
     }
 }
 
 public class Book {
-    private int pages;
-    private String title;
-    private LocalDateTime release;
- 
- 
+    private int pages; 
+    private String title; 
+    private LocalDateTime release; 
     private Library library;
     private List<Author> authors;
+
     public Book(int pages, String title, LocalDateTime release){
         this.pages = pages;
         this.title = title;
         this.release = release;
-    }
+        this.library = null; 
+        this.authors = new ArrayList<>();
+}
     public int getPages() {
         return pages;
     }
@@ -83,19 +86,27 @@ public class Book {
             author.addBook(this);
         }
     }
+
     @Override
     public String toString() {
-        return "Book{pages='" + pages + "', title='" + title + "', release='" + release + "', library=" + (library != null ? library.getName() : "None") +  "', authors=" + authors.size() + "}";
+        return "Book{pages=" + pages + ", title=" + title + ", release=" + release + ", library=" + (library != null ? library.getName() : "None") +  ", authors=" + authors.size() + "}";
     }
 }
 
 public class Library {
-    private String name;
-    private String address;
- 
+    private String address; 
+    private String name; 
     private List<Book> books;
-    public Library(String name, String address){
+
+    public Library(String address, String name){
+        this.address = address;
         this.name = name;
+        this.books = new ArrayList<>();
+}
+    public String getAddress() {
+        return address;
+    }
+    public void setAddress(String address) {
         this.address = address;
     }
     public String getName() {
@@ -104,21 +115,16 @@ public class Library {
     public void setName(String name) {
         this.name = name;
     }
-    public String getAddress() {
-        return address;
-    }
-    public void setAddress(String address) {
-        this.address = address;
-    }
     public void addBook(Book book) {
         if (!books.contains(book)) {
             books.add(book);
             book.addLibrary(this);
         }
     }
+
     @Override
     public String toString() {
-        return "Library{name='" + name + "', address='" + address + "', books=" + books.size() +  "'"}";
+        return "Library{address=" + address + ", name=" + name + ", books=" + books.size() + "}";
     }
 }
 

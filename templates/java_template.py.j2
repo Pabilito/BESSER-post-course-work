@@ -34,54 +34,73 @@ import java.time.LocalDate;
 }
 %}
 
+{# Store association information for later [Mult1_1, Mult1_2, Mult2_1, Mult2_2, Class1, Class2] #}
+{% set associations = [] %}
+{# 0. Check associations #}
+{%- for ass in model.associations -%} 
+    {% set association_data = [] %}
+    {% for property in ass.ends %}
+        {% if property.multiplicity is defined %}
+            {% set _ = association_data.append(property.multiplicity._Multiplicity__min) %}
+            {% set _ = association_data.append(property.multiplicity._Multiplicity__max) %}
+        {% endif %}
+        {% if property.type is defined and property.type.__class__.__name__ == 'Class' %}
+            {% set _ = association_data.append(property.type.name) %}
+        {% endif %}
+    {% endfor %}
+    {% set _ = associations.append(association_data) %}
+{%- endfor -%}
+
 {% for class in model.get_classes() %}
-    {# Store association information for later [Mult1_1, Mult1_2, Mult2_1, Mult2_2, Class1, Class2] #}
-    {% set associations = [] %}
-    {# 0. Check associations #}
-    {%- for ass in model.associations -%} 
-        {% set association_data = [] %}
-        {% for property in ass.ends %}
-            {% if property.multiplicity is defined %}
-                {% set _ = association_data.append(property.multiplicity._Multiplicity__min) %}
-                {% set _ = association_data.append(property.multiplicity._Multiplicity__max) %}
-            {% endif %}
-            {% if property.type is defined and property.type.__class__.__name__ == 'Class' %}
-                {% set _ = association_data.append(property.type.name) %}
-            {% endif %}
-        {% endfor %}
-        {% set _ = associations.append(association_data) %}
+    {% set tmp_associations = [] %}
+    {%- for ass in associations -%}
+        {% if ass[2] == class.name or ass[5] == class.name %}
+        {% set _ = tmp_associations.append(ass) %}
+        {% endif %}
     {%- endfor -%}
 
 public class {{ class.name }} {
     {# 1. Define attributes #}
     {# 1.1 Internal variables #}
     {% for attribute in class.attributes %}
-    private {{ type_map.get(attribute.type.name) }} {{ attribute.name }};
-    {% endfor %} 
-    {# 1.2 Variables derived from relations #} 
-    {%- for ass in associations -%}
+    private {{ type_map.get(attribute.type.name) }} {{ attribute.name }}; 
+    {% endfor %}
+    {#- 1.2 Variables derived from relations -#} 
+    {%- for ass in tmp_associations -%}
         {%- if ass[2] == class.name -%}
             {% if ass[4] > 1 %}
     private List<{{ ass[5] }}> {{ ass[5]|lower }}s;
-            {% else %} 
-    private {{ ass[5] }} {{ ass[5]|lower }};
+            {% else %}    private {{ ass[5] }} {{ ass[5]|lower }};
             {% endif %} 
-        {%- elif ass[5] == class.name -%}
+        {%- else -%}
             {% if ass[1] > 1 %}
     private List<{{ ass[2] }}> {{ ass[2]|lower }}s;
-            {% else %} 
-    private {{ ass[2] }} {{ ass[2]|lower }};
+            {% else %}    private {{ ass[2] }} {{ ass[2]|lower }};
             {% endif %} 
         {%- endif -%} 
     {%- endfor -%}
-
+    
     {# 2. Constructor #}
+
     public {{ class.name }}({%- for attribute in class.attributes -%}
             {{ type_map.get(attribute.type.name) }} {{ attribute.name }}{% if not loop.last %}, {% endif %}
         {%- endfor -%}){
         {% for attribute in class.attributes %}
         this.{{ attribute.name }} = {{ attribute.name }};
-        {% endfor %}
+        {% endfor %}{%- for ass in tmp_associations -%}
+            {%- if ass[2] == class.name -%}
+                {% if ass[4] > 1 %}
+        this.{{ ass[5]|lower }}s = new ArrayList<>();
+                {% else %}        this.{{ ass[5]|lower }} = null;
+                {% endif %} 
+                {%- else -%}
+                {% if ass[1] > 1 %}
+        this.{{ ass[2]|lower }}s = new ArrayList<>();
+                {% else %}        this.{{ ass[2]|lower }} = null; 
+                {% endif %} 
+            {%- endif -%} 
+        {%- endfor -%}      
+
     }
     {# 3. Getters/Setters #}
     {% for attribute in class.attributes %}
@@ -93,7 +112,7 @@ public class {{ class.name }} {
     }
     {% endfor %}
     {# 4. Add/set #}
-    {% for ass in associations %}
+    {% for ass in tmp_associations %}
         {%- if ass[2] == class.name -%}
             {% if ass[4] > 1 %}
     public void add{{ ass[5] }}({{ ass[5] }} {{ ass[5]|lower }}) {
@@ -114,7 +133,7 @@ public class {{ class.name }} {
         }
     }
             {% endif %} 
-        {%- elif ass[5] == class.name -%}
+        {%- else -%}
             {% if ass[1] > 1 %}
     public void add{{ ass[2] }}({{ ass[2] }} {{ ass[2]|lower }}) {
         if (!{{ ass[2]|lower }}s.contains({{ ass[2]|lower }})) {
@@ -136,25 +155,26 @@ public class {{ class.name }} {
             {% endif %} 
         {%- endif -%} 
     {% endfor %}
+
     {# 5. ToString #}
     @Override
     public String toString() {
         return "{{ class.name }}{
         {%- for attribute in class.attributes -%}
-            {{ attribute.name }}='" + {{ attribute.name }} + "'{% if not loop.last %}, {% endif %}
+            {{ attribute.name }}=" + {{ attribute.name }} + "{% if not loop.last %}, {% endif %}
         {%- endfor -%}
-        {%- for ass in associations -%}
+        {%- for ass in tmp_associations -%}
             {%- if ass[2] == class.name -%}
                 {%- if ass[4] > 1 -%}
-                    , {{ ass[5]|lower }}s=" + {{ ass[5]|lower }}s.size() + {% if not loop.last %} "'{% endif %}
+                    , {{ ass[5]|lower }}s=" + {{ ass[5]|lower }}s.size() + {% if not loop.last %} "{% endif %}
                 {%- else -%} 
-                    , {{ ass[5]|lower }}=" + ({{ ass[5]|lower }} != null ? {{ ass[5]|lower }}.getName() : "None") + {% if not loop.last %} "'{% endif %}
+                    , {{ ass[5]|lower }}=" + ({{ ass[5]|lower }} != null ? {{ ass[5]|lower }}.getName() : "None") + {% if not loop.last %} "{% endif %}
                 {%- endif -%} 
             {%- elif ass[5] == class.name -%}
                 {%- if ass[1] > 1 -%}
-                    , {{ ass[2]|lower }}s=" + {{ ass[2]|lower }}s.size() + {% if not loop.last %}"'{% endif %}
+                    , {{ ass[2]|lower }}s=" + {{ ass[2]|lower }}s.size() + {% if not loop.last %} "{% endif %}
                 {%- else -%} 
-                    , {{ ass[2]|lower }}=" + ({{ ass[2]|lower }} != null ? {{ ass[2]|lower }}.getName() : "None") + {% if not loop.last %} "'{% endif %}
+                    , {{ ass[2]|lower }}=" + ({{ ass[2]|lower }} != null ? {{ ass[2]|lower }}.getName() : "None") + {% if not loop.last %} "{% endif %}
                 {%- endif -%} 
             {%- endif -%}
         {%- endfor -%} "}";
