@@ -28,7 +28,7 @@ public class Author {
     public List<Book> getBooks() {
         return books;
     }
-
+    
     public void addBook(Book book) {
         if (!books.contains(book)) {
             books.add(book);
@@ -39,66 +39,6 @@ public class Author {
     @Override
     public String toString() {
         return "Author{name=" + name + ", email=" + email + ", books=" + books.size() + "}";
-    }
-}
-
-public class Book {
-    private int pages; 
-    private String title; 
-    private LocalDateTime release; 
-    private Library library;
-    private List<Author> authors;
-
-    public Book(int pages, String title, LocalDateTime release){
-        this.pages = pages;
-        this.title = title;
-        this.release = release;
-        this.library = null; 
-        this.authors = new ArrayList<>();
-    }    
-
-    public int getPages() {
-        return pages;
-    }
-    public void setPages(int pages) {
-        this.pages = pages;
-    }
-    public String getTitle() {
-        return title;
-    }
-    public void setTitle(String title) {
-        this.title = title;
-    }
-    public LocalDateTime getRelease() {
-        return release;
-    }
-    public void setRelease(LocalDateTime release) {
-        this.release = release;
-    }
-    public Library getLibrary() {
-        return library;
-    }
-
-    public void setLibrary(Library library) {
-        if (this.library != library) {
-            this.library = library;
-            library.addBook(this);
-        }
-    }
-    public List<Author> getAuthors() {
-        return authors;
-    }
-    
-    public void addAuthor(Author author) {
-        if (!authors.contains(author)) {
-            authors.add(author);
-            author.addBook(this);
-        }
-    }
-
-    @Override
-    public String toString() {
-        return "Book{pages=" + pages + ", title=" + title + ", release=" + release + ", library=" + (library != null ? library.getName() : "None") +  ", authors=" + authors.size() + "}";
     }
 }
 
@@ -139,6 +79,66 @@ public class Library {
     @Override
     public String toString() {
         return "Library{name=" + name + ", address=" + address + ", books=" + books.size() + "}";
+    }
+}
+
+public class Book {
+    private int pages; 
+    private String title; 
+    private LocalDateTime release; 
+    private List<Author> authors;
+    private Library library;
+
+    public Book(int pages, String title, LocalDateTime release){
+        this.pages = pages;
+        this.title = title;
+        this.release = release;
+        this.authors = new ArrayList<>();
+        this.library = null; 
+    }    
+
+    public int getPages() {
+        return pages;
+    }
+    public void setPages(int pages) {
+        this.pages = pages;
+    }
+    public String getTitle() {
+        return title;
+    }
+    public void setTitle(String title) {
+        this.title = title;
+    }
+    public LocalDateTime getRelease() {
+        return release;
+    }
+    public void setRelease(LocalDateTime release) {
+        this.release = release;
+    }
+    public List<Author> getAuthors() {
+        return authors;
+    }
+
+    public void addAuthor(Author author) {
+        if (!authors.contains(author)) {
+            authors.add(author);
+            author.addBook(this);
+        }
+    }
+    public Library getLibrary() {
+        return library;
+    }
+
+    public void setLibrary(Library library) {
+        if (this.library != library) {
+            this.library = library;
+            library.addBook(this);
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "Book{pages=" + pages + ", title=" + title + ", release=" + release + ", authors=" + authors.size() +  ", library=" + (library != null ? library.getName() : "None") + "}";
     }
 }
 

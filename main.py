@@ -2,7 +2,7 @@ from besser.BUML.metamodel.structural import DomainModel
 from besser.BUML.metamodel.structural import DomainModel, Class, Property, \
     Multiplicity, BinaryAssociation, StringType, IntegerType, DateTimeType
 from besser.utilities import ModelSerializer
-from java_generator import JavaGenerator
+from generator import CodeGenerator
 
 ############################
 #   BUML model definition  #
@@ -45,5 +45,6 @@ library_model: DomainModel = DomainModel(name="Library_model", types={library, b
 #      Code Generation     #
 ############################
 
-generator: JavaGenerator = JavaGenerator(model=library_model)
-generator.generate()
+generator: CodeGenerator = CodeGenerator(model=library_model)
+generator.generate('java')
+generator.generate('c#')
