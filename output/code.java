@@ -1,10 +1,5 @@
-
-
-
-import java.util.ArrayList
-import java.util.List
-import java.util.ArrayList
-import java.util.List
+import java.util.ArrayList;
+import java.util.List;
 import java.time.LocalDateTime;
 
 public class Author {
@@ -16,7 +11,8 @@ public class Author {
         this.name = name;
         this.email = email;
         this.books = new ArrayList<>();
-}
+    }    
+
     public String getName() {
         return name;
     }
@@ -29,6 +25,10 @@ public class Author {
     public void setEmail(String email) {
         this.email = email;
     }
+    public List<Book> getBooks() {
+        return books;
+    }
+
     public void addBook(Book book) {
         if (!books.contains(book)) {
             books.add(book);
@@ -55,7 +55,8 @@ public class Book {
         this.release = release;
         this.library = null; 
         this.authors = new ArrayList<>();
-}
+    }    
+
     public int getPages() {
         return pages;
     }
@@ -84,6 +85,10 @@ public class Book {
             library.addBook(this);
         }
     }
+    public List<Author> getAuthors() {
+        return authors;
+    }
+    
     public void addAuthor(Author author) {
         if (!authors.contains(author)) {
             authors.add(author);
@@ -106,7 +111,8 @@ public class Library {
         this.name = name;
         this.address = address;
         this.books = new ArrayList<>();
-}
+    }    
+
     public String getName() {
         return name;
     }
@@ -119,10 +125,14 @@ public class Library {
     public void setAddress(String address) {
         this.address = address;
     }
+    public List<Book> getBooks() {
+        return books;
+    }
+
     public void addBook(Book book) {
         if (!books.contains(book)) {
             books.add(book);
-            book.addLibrary(this);
+            book.setLibrary(this);
         }
     }
 
